@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <% include _head.html %>
+    <title>user management</title>
+    <link href="/css/userlist.css" rel="stylesheet">
+
+</head>
+<body>
+<% include _nav.html %>
+<div class="container-fluid">
+    <div class="row">
+            <% include _menu.html %>
+            <!--顶部按钮-->
+            <div class="col-md-11 col-md-offset-1 main">
+                <div class="container-fluid">
+                    <a type="button" class="btn btn-info add" href="javascript:void(0);" onclick="addUserInfo()">
+                        <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>Add
+                    </a>
+                    <button type="button" class="btn btn-info edit">
+                        <span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Edit
+                    </button>
+                    <button type="button" class="btn btn-info delete">
+                        <span class="glyphicon glyphicon-remove" aria-hidden="true"></span> Delete
+                    </button>
+                    <!--表格上方的列名-->
+					<div style="width: 99%">
+                    <fieldset>
+                    <legend style="font:normal 13px '宋体'">data list</legend>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th><input class="checkall" type="checkbox"></th>
+                                    <th>ID</th>
+                                    <th>username</th>
+                                    <th>role</th>
+                                    <th>regist time</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </fieldset>
+                    </div>
+                </div>
+            </div>
+    </div>
+</div>
+
+<!--弹出的编辑框-->
+<div class="modal fade" id="mymodal">
+    <div class="modal-dialog" style="margin: 200px auto">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title">user info edit</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="editinputUsername">username</label>
+                    <input type="text" id="editinputUsername" class="form-control" placeholder="user name"  autocomplete="off" >
+                </div>
+
+                <div class="form-group">
+                    <label for="editinputPassword">password</label>
+                    <input type="password" id="editinputPassword" class="form-control" placeholder="password"  value="" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="inputFreightId" class="col-sm-2 control-label" style="margin-top: 10px;margin-left: -10px;">role:</label>
+                    <div class="col-sm-8 input-group">
+                        <!--<input type="text" class="form-control" id="inputFreightNo" placeholder="快递公司" required autofocus>-->
+                        <select id="inputFreightId" class="form-control" required>
+                            <option value="3">user</option>
+                            <option value="2">worker</option>
+                            <option value="1">admin</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">close</button>
+                <button type="button" class="btn btn-primary" id="saveButton">save</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+</body>
+</html>
+<% include _foot.html %>
+
+
+
+<script>
+    var tab = '/userlist';
+    //刷新表单
+
+    var isAddUser;
+    var UserID;
+
+    function refreshTable() {
+        $('.table').dataTable().fnClearTable();
+    }
+
+    var dataArray;
+    //判断勾选数量决定按钮的可用性
+    function updateBtnStatus() {
+        var checkboxs = $(".dataTable .checkbox:checked");
+        if(checkboxs.length == 0){
+            $('.btn.edit').attr('disabled','disabled');
+            $('.btn.delete').attr('disabled','disabled');
+        }else if(checkboxs.length ==1){
+            $('.btn.edit').attr('disabled',null);
+            $('.btn.delete').attr('disabled',null);
+        }else {
+            $('.btn.edit').attr('disabled','disabled');
+            $('.btn.delete').attr('disabled',null);
+        }
+    }
+
+    $(function () {
+        //每页显示的数量
+        var pageSize = 15;
+        $('.table').dataTable({
+            "pagingType":"simple_numbers",//设置分页控件的模式
+            searching:false,//开启查询框
+            aLengthMenu:[pageSize],//每页显示的数量
+            "iDisplayLength": pageSize,
+            "bLengthChange": false,//屏蔽tables的一页展示多少条记录的下拉列表
+            aaSorting: [],
+            "oLanguage": {  //对表格国际化
+                "sLengthMenu": "每页显示 _MENU_条",
+                "sZeroRecords": "没有找到符合条件的数据",
+                "sInfo": "当前第 _START_ - _END_ 条　共计 _TOTAL_ 条",
+                "sInfoEmpty": "No Record",
+                "sInfoFiltered": "(从 _MAX_ 条记录中过滤)",
+                "sSearch": "Search",
+                "oPaginate": {
+                    "sFirst": "First",
+                    "sPrevious": "Previous",
+                    "sNext": "Next",
+                    "sLast": "Last"
+                }
+            },
+            stateSave: true,
+            "processing": true, //打开数据加载时的等待效果
+            "serverSide": true,//打开后台分页
+            "columns": [
+                { "orderable": false },
+                { "orderable": false },
+                { "orderable": false },
+                { "orderable": false },
+                { "orderable": false }
+            ],
+            "fnServerData" : function(sSource, aoData, fnCallback) {
+                var start = aoData[3].value;
+                var length = aoData[4].value;
+                $.post('/user/query', {start:start, length:length}, function(res){
+                    if(res.code>=0){
+                        dataArray = res.data.data;
+                        var ret = {recordsTotal: res.data.count,recordsFiltered:res.data.count, data:[]}
+                        for(var i=0;i<res.data.data.length;i++){
+                            var obj = res.data.data[i];
+                            var item = [];
+                            item.push('<input class="checkbox" type="checkbox" data-id="'+obj.id+'">');
+                            item.push(obj.id);
+                            item.push('<a href="javascript:void(0);" onclick="editUserInfo('+i+')" data-index=i>'+obj.username+'</a>');
+                            item.push(obj.permission==1?'admin':obj.permission==2?'worker':'user');
+                            item.push('<span title="'+moment(obj.createTime).fromNow()+'">'+moment(obj.createTime).format('YYYY-MM-DD hh:mm:ss')+'</span>');
+                            ret.data.push(item);
+                        }
+                        fnCallback(ret);
+                        updateBtnStatus();
+                    }
+
+                })
+            }
+        });
+        $('.btn.edit').attr('disabled', 'disabled');
+        $('.btn.delete').attr('disabled', 'disabled');
+        $('.dataTable').delegate('input.checkbox', 'click', function(e){
+            updateBtnStatus();
+        });
+        $('.dataTable').delegate('.checkall', 'click', function(e){
+            $('.dataTable .checkbox').prop('checked', $(this).prop('checked'));
+            updateBtnStatus();
+        });
+    });
+
+    //触发弹出框
+    var editUserInfo = function (index) {
+        isAddUser = false;
+        showUserInfo(index);
+    };
+    var addUserInfo = function () {
+        isAddUser = true;
+        showUserInfo();
+    };
+
+    var showUserInfo = function (index) {
+        $("#editinputUsername").val(isAddUser==false?dataArray[index].username:"");
+        $("#editinputUsername").attr("disabled",isAddUser==false?"disabled":null);
+        $("#editinputPassword").val(isAddUser==false?dataArray[index].password:"");
+        $("#inputFreightId").val(isAddUser==false?dataArray[index].permission:"3");
+        UserID = isAddUser==false?dataArray[index].id:null;
+        $("#mymodal").modal("toggle");
+    }
+
+    //保存按钮触发
+    $("#saveButton").click(function () {
+        var username = $("#editinputUsername").val();
+        var password = $("#editinputPassword").val();
+        var permission = $("#inputFreightId").val();
+        if(!username||!password||!permission){
+            alert("please complete user information!");
+            return;
+        }
+        if(isAddUser == true){
+            postUrl('/addUser',  {username: username, password: password,permission: permission});
+        }else {
+            postUrl('/editUser',  {userID: UserID, password: password,permission: permission});
+        }
+    });
+
+    //删除按钮触发
+    $('.btn.delete').on('click', function(e){
+        if(!confirm("delete?")){
+            return;
+        }
+        var ids = [];
+        $('.checkbox:checked').each(function(i, item){
+            ids.push(parseInt($(item).attr('data-id')));
+        });
+        postUrl('/deleteUser', {ids: ids.join(',')});
+
+    });
+    //编辑按钮触发
+    $('.btn.edit').on('click',function (e) {
+        var uid;
+        $('.checkbox:checked').each(function(i, item){
+            uid = (parseInt($(item).attr('data-id')));
+        });
+        for(var i=0;i<dataArray.length;i++){
+            if(dataArray[i].id==uid){
+                editUserInfo(i);
+                return;
+            }
+        }
+    })
+
+
+    var successWithData = function() {
+        alert("success");
+        $('#mymodal').modal('hide');
+        $('.table').dataTable().fnClearTable();
+    }
+</script>

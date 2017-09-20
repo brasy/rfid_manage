@@ -1,0 +1,46 @@
+<div class=" col-md-1 sidebar" style="background-color: #e1e1e1;min-width:145px; ">
+    <ul class="nav nav-sidebar" style="">
+        <!--最高管理员菜单-->
+        <% if(user.permission == 1){ %>
+            <li class=""><a href="/rfidManage">RFID Management<span class="sr-only">(current)</span></a></li>
+            <li class=""><a href="/warehousing">warehousing Management</a></li>
+            <li class=""><a href="/locationManage">location Management</a></li>
+            <li class=""><a href="/assetManage">asset Management</a></li>
+            <li class=""><a href="/auditManage">audit Management</a></li>
+			<li class=""><a href="/reportManage">report Management</a></li>
+			<li class='bg1' > <a href='javascript:void(0);' onclick='showmenu("0","768","1")'>
+                <div class='r-tit' value='0' title='Personal Information' >个人信息查询</div></a>
+                <ul class='menua' id='menu_childs_0' style='display:none;' > </ul>
+			</li>
+			<li class=""><a href="/userlist">user Management</a></li>
+        <% } %>
+    </ul>
+
+</div>
+<script type="text/javascript">
+    function showmenu(value, menuid, type) {
+        if ($("#menu_childs_" + value).is(":hidden")) {
+            $.ajax({  
+                type: "post", 
+                url: "ashx/Leave2MenuHandler_V2.ashx?menuid=" + menuid + "&type=" + type,
+                dataType: 'text',
+                async: false,
+                success: function (data) {
+                    if (data == "") {
+                        window.location.href = "DefaultLogin_V2.aspx";
+                    }
+                    $(".r-tit[value]").each(function () {
+
+                        $("#menu_childs_" + $(this).attr('value')).html("");
+                    });
+                     
+                    $("#menu_childs_" + value).html(data);
+                    $("#menu_childs_" + value).show();
+                    $(".menua").not("#menu_childs_" + value).hide();
+                }
+            });
+        } else {
+            $("#menu_childs_" + value).slideUp(1000);
+        }
+    }
+</script>

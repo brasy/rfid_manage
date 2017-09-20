@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <% include _head.html %>
+    <title>location manager</title>
+    <link href="/css/userlist.css" rel="stylesheet">
+</head>
+<body style="">
+<% include _nav.html %>
+<div class="container-fluid">
+    <div class="row">
+        <% include _menu.html %>
+        <div class="col-md-11 col-md-offset-1 main">
+            <div class="container-fluid">
+                <a type="button" class="btn btn-info add" href="javascript:void(0);" onclick="addLabInfo()" style="margin-left: 50px;margin-right: 50px">
+                    <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>Add Location </a>
+                <button type="button" class="btn btn-info delete" id="deleteAddress">
+                    <span class="glyphicon glyphicon-remove"  aria-hidden="true"></span>Delete Location
+                </button>
+                <div style="width: 99%">
+                    <fieldset><legend style="font:normal 20px '宋体'; margin-top:20px;">select lab:</legend>
+                        <div style="float: left;">
+                            <h5><p>Site: <select class="form-control" id="se-site">
+                                <option value="">All</option>
+                                <option value="NJ">NJ</option>
+                                <option value="SH">SH</option>
+                            </select></p></h5>
+                        </div>
+                        <div style="float: left;margin-left: 200px">
+               	            <h5><p>Building: <select class="form-control" id="se-building">
+                                <option value="">All </option>
+                                <option value="B1">B1 </option>
+                                <option value="B2">B2 </option>
+                            </select></p></h5>
+                        </div>
+                        <div style="float: left;margin-left: 200px">
+               	 	        <h5><p>Floor: <select class="form-control" id="se-floor">
+               		            <option value="">All </option>
+               		            <option value="F1">F1 </option>
+                                <option value="F4">F4 </option>
+                                <option value="F12">F12 </option>
+                            </select></p></h5>
+                        </div>
+                        <div style="float: left; margin-left: 350px;">
+                        <button type="button" class="btn btn-info search" id="SearchLab">
+                            <span class="glyphicon glyphicon-search" aria-hidden="true"></span>Search </button>
+                        </div>
+                        <table class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th style="width:20px;"><input class="checkall" type="checkbox"></th>
+                                <th style="width:80px;">Site</th>
+                                <th style="width:80px;">Building</th>
+                                <th style="width:80px;">Floor</th>
+                                <th style="width:80px;">Longitudo,Latitude</th>
+                                <th style="width:80px;">Time</th>
+                            </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                     </fieldset>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--add lab location-->
+<div class="modal fade" id="labmodal">
+    <div class="modal-dialog" style="margin: 200px auto">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title">Add Lab Location</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="editSite">Site</label>
+                    <input type="text" id="editSite" class="form-control"   autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="editBuilding">Building</label>
+                    <input type="text" id="editBuilding" class="form-control"  autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="editFloor">Floor</label>
+                    <input type="text" id="editFloor" class="form-control"  autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="editLongitudo">longitudo</label>
+                    <input type="text" id="editLongitudo" class="form-control"  autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="editLatitude">latitude</label>
+                    <input type="text" id="editLatitude" class="form-control"  autocomplete="off">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">close</button>
+                <button type="button" class="btn btn-primary" id="saveLabButton">save</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+</body>
+</html>
+<% include _foot.html %>
+
+<!--=================================================JS代码===================================================-->
+<script>
+    var tab = '/locationManage';
+    function refreshTable(){
+        $('.table').eq(0).dataTable().fnDraw(false);
+    }
+    function updateBtnStatus(){
+        var checkboxs = $('.dataTable .checkbox:checked');
+        if(checkboxs.length == 0){
+            $('.btn.delete').attr('disabled', 'disabled');
+        }else if(checkboxs.length == 1){
+            $('.btn.delete').attr('disabled', null);
+        }else{
+            $('.btn.delete').attr('disabled', null);
+        }
+    }
+	
+    //var addressInfoArray;
+    var dataArray;
+    //table
+    $(function () {
+        var site='';
+        var building='';
+        var floor='';
+        var pageSize = 15;
+        $('.table').dataTable({
+            "pagingType": "simple_numbers",
+            searching: false,
+            aLengthMenu:[pageSize],
+            "iDisplayLength": pageSize,
+            "bLengthChange": false,
+            aaSorting: [],
+            "oLanguage": {
+                "sLengthMenu": "Every Page: _MENU_ ",
+                "sZeroRecords": "Zero Records",
+                "sInfo": "From _START_ - _END_  Total _TOTAL_ ",
+                "sInfoEmpty": "no record",
+                "sInfoFiltered": "(From _MAX_ records to filter)",
+                "sSearch": "Search: ",
+                "oPaginate": {
+                    "sFirst": "First",
+                    "sPrevious": "Previous",
+                    "sNext": "Next",
+                    "sLast": "Last"
+                }
+            },
+            stateSave: true,
+            "processing": true,
+            "serverSide": true,
+            "columns": [
+                {"orderable": false},
+                {"orderable": false},
+                {"orderable": false},
+                {"orderable": false},
+                {"orderable": false},
+                {"orderable": false}
+            ],
+            "fnServerData" : function (sSource, aoData, fnCallback) {
+                var start = aoData[3].value;
+                var length = aoData[4].value;
+                $.post('/position/query', {site:site, building:building, floor:floor, start: start, length: length}, function (res) {
+                    if (res.code >= 0) {
+                        //dataArray = res.data.data;
+                        var ret = {recordsTotal: res.data.count, recordsFiltered: res.data.count, data:[]}
+                        for (var i = 0; i < res.data.data.length; i++) {
+                            var obj = res.data.data[i];
+                            var item = [];
+							item.push('<input class="checkbox" type="checkbox" data-id="'+obj.id+'">');
+                            item.push(obj.site);
+							item.push(obj.building);
+                            item.push('<a href="javascript:void(0);" onclick="editAddress(' + i + ')" data-index=i>' + obj.floor + '</a>');
+                            item.push('(' + obj.longitudo + ',' + obj.latitude + ')');
+                            item.push('<span title="' + moment(obj.opentime).fromNow() + '">' + moment(obj.opentime).format('YYYY-MM-DD hh:mm:ss') + '</span>');
+                            ret.data.push(item);
+                        }
+                        fnCallback(ret);
+                        updateBtnStatus();
+                    }
+                });
+            }
+        });
+		$('.btn.delete').attr('disabled', 'disabled');
+        $('.dataTable').delegate('input.checkbox', 'click', function(e){
+            updateBtnStatus();
+        });
+        $('.dataTable').delegate('.checkall', 'click', function(e){
+            $('.dataTable .checkbox').prop('checked', $(this).prop('checked'));
+            updateBtnStatus();
+        });
+
+		//search location
+        $('#SearchLab').on('click', function(e) {
+            site=$('#se-site').val();
+            building=$('#se-building').val();
+            floor=$('#se-floor').val();
+            refreshTable();
+        });
+    });
+	//add position
+    var addLabInfo = function () {
+        $("#labmodal").modal("toggle");
+    }
+
+    //edit model
+    var editAddress = function (index) {
+    }
+
+    //Add Lab Location, ok
+    $("#saveLabButton").on('click',function (e) {
+        if(!confirm("confirm lab location?")){
+            return;
+        }
+        var site = $('#editSite').val();
+        var building = $('#editBuilding').val();
+        var floor = $('#editFloor').val();
+		var longitudo = $('#editLongitudo').val();
+        var latitude = $('#editLatitude').val();
+        $.post('/addLab',{site:site,building:building,floor:floor,longitudo:longitudo,latitude:latitude},function (res) {
+            if(res.code < 0){
+                return alert('fail'+res.msg);
+            }
+            alert('success');
+            $('#labmodal').modal('hide');
+        });
+    });
+
+	
+
+    /*//select
+    $("#site").on('change',function (e) {
+        jQuery("#building").empty();
+        jQuery("#floor").empty();
+        for(var i=0;i<addressInfoArray.length;i++){
+            var building;//去重的标识
+            var fristCity ;//区和市默认选择第一个
+            if($('#site').val() == addressInfoArray[i].site){
+                if(building != addressInfoArray[i].building){
+                    console.log("此次 building为"+building+"数组中的为"+addressInfoArray[i].building);
+                    $('#building').append('<option value="'+addressInfoArray[i].building+'">'+addressInfoArray[i].building+'</option>')
+                    building = addressInfoArray[i].building;
+                    if(!fristCity){
+                        fristCity = addressInfoArray[i].building;
+                    };
+                };
+            };
+            if( fristCity == addressInfoArray[i].building){
+                $('#floor').append('<option value="'+addressInfoArray[i].id+'">'+addressInfoArray[i].floor+'</option>')
+            };
+        };
+        showCoordinate();
+    });
+
+    $("#building").on('change',function (e) {
+        jQuery("#floor").empty();
+        for(var i=0;i<addressInfoArray.length;i++){
+            if( $('#building').val() == addressInfoArray[i].building){
+                $('#floor').append('<option value="'+addressInfoArray[i].id+'">'+addressInfoArray[i].floor+'</option>')
+            };
+        }
+        showCoordinate();
+    });
+    $('#floor').on('change',function () {
+        showCoordinate();
+    })
+
+    //flash detail info
+    var showCoordinate = function () {
+        var i = parseInt($('#floor').val());
+        $('#longitudo').html(addressInfoArray[i-1].longitudo);
+        $('#latitude').html(addressInfoArray[i-1].latitude);
+    }
+    */
+
+	//delete, ok
+    $('.btn.delete').on('click', function(e){
+        if(!confirm("delete?")){
+            return;
+        }
+        var ids = [];
+        $('.checkbox:checked').each(function(i, item){
+            ids.push(parseInt($(item).attr('data-id')));
+        });
+        postUrl('/deletePosition', {ids: ids.join(',')});
+        refreshTable();
+    });
+</script>
