@@ -6,7 +6,7 @@ var cfg = {
   mysql:{
     host:'localhost',
     user:'root',
-    password:'asb#1234',
+    password:'bbb#1234',
     database:'rfid_user',
     port: 3306,
     acquireTimeout: 20000
