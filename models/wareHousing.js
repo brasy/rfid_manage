@@ -1,16 +1,179 @@
-/** * Created by xying on 2017/9/21. */var lib = require('../config/lib.js');
+/** * Created by xying on 2017/9/21. */
+var lib = require('../config/lib.js');
 //使用链接池,提升性能var pool = lib.getPool();
-var query = function (req,callback) {    var data = []; console.log('warehousing sql js');    pool.getConnection(function(err, connection) {        if(err) {            data.type = "fail";            data.message = "connect fail";            data.err = err;            callback(data);            return;  }
-        var epcid = req.body.epcid||'';        var start = parseInt(req.body.start);        var length = parseInt(req.body.length);         var epcsql ='where epcid_status='+connection.escape("INSTALLED") + 'and rfid_epcid like "%'+epcid+'%" or epcid_status='+connection.escape("OBSOLETE");        connection.query('select * from rfid_inventory left join rfid_location on rfid_inventory.location_epcid = rfid_location.rfid_location_epcid '+ epcsql +'limit ?,?',[start,length], function(err,result){            if (err) {                data.type = "fail";                data.message = "select fail";                data.err = err;                callback(data);            } else {            connection.query('select count(1) from rfid_inventory '+ epcsql +'',[], function(err,result2){                data.type = "success";                data.message = "success";                data.err = '';                data.count = result2[0]['count(1)'];                data.data = result;                callback(data);            }); }            connection.release();        });    });}
-var save = function (index,locationS,serialNo,status,locationEpcid,assertType,callback) {    var data = [];        console.log('warehousing save js');
-    pool.getConnection(function(err, connection) {        if(err) {            data.type = "fail";            data.message = "connect fail";            data.err = err;            callback(data);            return;                }        connection.query('update rfid_inventory set epcid_status = ?, asset_num = ? where rfid_index = ?', [status, serialNo, index], function (err, result) {            if (err) {                data.type = "fail";                data.message = "update fail";                data.err = err;                callback(data);                return;            } else {                if(assertType=='E') {                    connection.query('select count(1) from rfid_inventory where location_epcid =?', [locationEpcid], function (err, result1) {                        console.log(result1[0]['count(1)']);                        if ( result1[0]['count(1)']>0) {                            connection.query('update rfid_inventory set location_epcid = ? where rfid_index = ?', [locationEpcid, index], function (err, result2) {                                if (err) {                                    data.type = "fail";                                    data.message = "connect fail";                                    data.err = err;                                    callback(data);                                    return;                                }                                data.type = "success";                                data.message = "success";                                data.err = '';                                callback(data);                            });                        }                        else                        {                            data.type = "fail";                            data.message = "please input existing locationEpcid in rfid table";                            data.err = err;                            callback(data);                            return;                        }                    });                    connection.release();                }                else {                    connection.query('update rfid_location set lasLocationString = ? where rfid_location_epcid = ?', [locationS, locationEpcid], function (err, result) {                        if (err) {                            data.type = "fail";                            data.message = "update fail";                            data.err = err;                            callback(data);                            return;                        } else {                            data.type = "success";                            data.message = "success";                            data.err = '';                            callback(data);                        }                        connection.release();                    });                }            }        });    });
+var query = function (req,callback) {
+  var data = []; console.log('warehousing sql js');
+  pool.getConnection(function(err, connection) {
+    if(err) {
+      data.type = "fail";
+      data.message = "connect fail";
+      data.err = err;
+      callback(data);
+      return;  }
+        
+    var epcid = req.body.epcid||'';
+    var start = parseInt(req.body.start);
+    var length = parseInt(req.body.length);
+    var epcsql ='where epcid_status='+connection.escape("INSTALLED") + 'and rfid_epcid like "%'+epcid+'%" or epcid_status='+connection.escape("OBSOLETE");
+    connection.query('select * from rfid_inventory left join rfid_location on rfid_inventory.location_epcid = rfid_location.rfid_location_epcid '+ epcsql +'limit ?,?',[start,length], function(err,result){
+      if (err) {
+        data.type = "fail";
+        data.message = "select fail";
+        data.err = err;
+        callback(data);
+      } else {
+        connection.query('select count(1) from rfid_inventory '+ epcsql +'',[], function(err,result2){
+          data.type = "success";
+          data.message = "success";
+          data.err = '';
+          data.count = result2[0]['count(1)'];
+          data.data = result;
+          callback(data);
+        });
+      }
+      connection.release();
+    });
+  });}
+var save = function (index,locationS,serialNo,status,locationEpcid,assertType,callback) {
+  var data = [];
+  console.log('warehousing save js');
+    pool.getConnection(function(err, connection) {
+      if(err) {
+        data.type = "fail";
+        data.message = "connect fail";
+        data.err = err;
+        callback(data);
+        return;
+      }
+      connection.query('update rfid_inventory set epcid_status = ?, asset_num = ? where rfid_index = ?', [status, serialNo, index], function (err, result) {
+        if (err) {
+          data.type = "fail";
+          data.message = "update fail";
+          data.err = err;
+          callback(data);
+          return;
+        } else {
+          if(assertType=='E') {
+            connection.query('select count(1) from rfid_inventory where location_epcid =?', [locationEpcid], function (err, result1) {
+              console.log(result1[0]['count(1)']);
+              if ( result1[0]['count(1)']>0) {
+                connection.query('update rfid_inventory set location_epcid = ? where rfid_index = ?', [locationEpcid, index], function (err, result2) {
+                  if (err) {
+                    data.type = "fail"; 
+                    data.message = "connect fail";
+                    data.err = err;
+                    callback(data); 
+                    return;
+                  }
+                  data.type = "success";
+                  data.message = "success";
+                  data.err = '';
+                  callback(data);
+                }); 
+              }
+              else
+              {
+                data.type = "fail";
+                data.message = "please input existing locationEpcid in rfid table";
+                data.err = err;
+                callback(data);
+                return;
+              }
+            });
+            connection.release();
+          }
+          else {
+            connection.query('update rfid_location set lasLocationString = ? where rfid_location_epcid = ?', [locationS, locationEpcid], function (err, result) {
+              if (err) {
+                data.type = "fail";
+                data.message = "update fail";
+                data.err = err;
+                callback(data);
+                return;
+              } else {
+                data.type = "success";
+                data.message = "success";
+                data.err = '';
+                callback(data);
+              }
+              connection.release();
+            });
+          }
+        }
+      });
+    });
 }
-/** just for analysis csv files * maybe for audit in the future * create by xying 2017-09-25 */var insert = function(elem, callback){    var data = []; var time;    var epcid;    var serialNo;    var locationEpcid;    var locationS;    var operator;    var ptsNo;    var timestamp = new Date();    console.log('warehousing insert js');    console.log(elem);
-    //just for debug and show elem infor    for (var i=0;i<elem.length;i++){        time = String(elem[i][0]);        epcid = String(elem[i][1]);        console.log(epcid);        serialNo = String(elem[i][2]);        console.log(serialNo);        locationEpcid = String(elem[i][3]);        locationS = String(elem[i][4]);        operator = String(elem[i][5]);        console.log(operator);        ptsNo = String(elem[i][6]);    }
-    pool.getConnection(function(err, connection) {        if(err) {            data.type = "fail";            data.message = "connect fail";            data.err = err;            callback(data);            return;  }
-        var mysql = "insert into rfid_temp(`install_time`,`rfid_epcid`,`asset_num`,`location_epcid`,`lasLocationString`,`installed_account`,`installed_tem_id`) values ?";        connection.query(mysql,[elem],function(err, result){            if (err) {                data.type = "fail";                data.message = "load warehousing information fail";                data.err = err;             } else {                data.type = "success";                data.message = "load warehousing information success";                data.err = '';            }        });        callback(data);         connection.release();    });}
-var lock = function(sql, callback){    console.log('lock tables');    var data = [];    var lockSql = 'lock tables '+ sql +' ';    lib.query({sql:lockSql,params:[]}, function(err,result){        if(err) {            data.type = "fail";            data.message = "lock tables fail";            data.err = err;            callback(data);            return;        }        data.type = "success";        callback(data);    });}
-var unlock = function(callback){    console.log('unlock tables'); var data = [];    var unlockSql = 'unlock tables;';
+/** just for analysis csv files * maybe for audit in the future * create by xying 2017-09-25 */
+var insert = function(elem, callback){
+  var data = [];
+  var time;
+  var epcid;
+  var serialNo;
+  var locationEpcid;
+  var locationS;
+  var operator;
+  var ptsNo;
+  var timestamp = new Date();
+  console.log('warehousing insert js');
+  console.log(elem);
+    
+  //just for debug and show elem infor
+  for (var i=0;i<elem.length;i++){
+    time = String(elem[i][0]);
+    epcid = String(elem[i][1]);
+    console.log(epcid);
+    serialNo = String(elem[i][2]);
+    console.log(serialNo);
+    locationEpcid = String(elem[i][3]);
+    locationS = String(elem[i][4]);
+    operator = String(elem[i][5]);
+    console.log(operator);
+    ptsNo = String(elem[i][6]);
+  }
+    
+  pool.getConnection(function(err, connection) {
+    if(err) {
+      data.type = "fail";
+      data.message = "connect fail";
+      data.err = err;
+      callback(data);
+      return;
+    }
+        
+    var mysql = "insert into rfid_temp(`install_time`,`rfid_epcid`,`asset_num`,`location_epcid`,`lasLocationString`,`installed_account`,`installed_tem_id`) values ?";
+    connection.query(mysql,[elem],function(err, result){
+      if (err) {
+        data.type = "fail";
+        data.message = "load warehousing information fail";
+        data.err = err;
+      } else {
+        data.type = "success";
+        data.message = "load warehousing information success";
+        data.err = '';
+      }
+    });
+    callback(data);
+    connection.release();
+  });
+}
+var lock = function(sql, callback){
+  console.log('lock tables');
+  var data = [];
+  var lockSql = 'lock tables '+ sql +' ';
+  lib.query({sql:lockSql,params:[]}, function(err,result){
+    if(err) {
+      data.type = "fail";
+      data.message = "lock tables fail";
+      data.err = err; 
+      callback(data);
+      return;
+    }
+    data.type = "success";
+    callback(data);
+  });
+}
+var unlock = function(callback){
+  console.log('unlock tables'); var data = [];    var unlockSql = 'unlock tables;';
     lib.query({sql:unlockSql,params:[]}, function(err,result){        if(err) {            data.type = "fail";            data.message = "unlock tables fail";            data.err = err;            callback(data);            return;        }        data.type = "success";        callback(data);    });}
 /* * for AIDC * create by xying 2017-10-15 */var beginsql = function(){    console.log('beginsql tables');
     lib.query({sql:'begin;',params:[]}, function(err,result){        if(err) {            throw err;        }    });    console.log('beginsql infor');}
