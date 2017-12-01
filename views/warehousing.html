@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <% include _head.html %>
+    <title>Warehousing manage</title>
+</head>
+<body>
+<% include _nav.html %>
+<div class="container-fluid">
+    <div class="row">
+        <% include _menu.html %>
+        <div class="col-md-11 col-md-offset-1 main">
+            <div class="container-fluid">
+                <input type="text" id='sepcid' class="form-control " placeholder="EPCID" style="width:155px;display:inline-block;margin-left:20px;">
+                <button type="button" class="btn btn-info search" id="SearchWareHouse" style="margin-left: 50px;margin-right: 50px">
+                    <span class="glyphicon glyphicon-search" aria-hidden="true"></span>Search 
+                </button>
+                <button type="button" class="btn btn-info upload" id="ImportWareHouse" style="margin-left: 350px;margin-right: 50px">
+                    <span class="glyphicon glyphicon-upload" aria-hidden="true"></span>WareHousing Management
+                </button>
+                <div style="width: 99%">
+                    <fieldset><legend style="font:normal 20px '宋体'; margin-top:20px;">Warehousing Information</legend>
+                    <table class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th style="width:10px;text-align:center;">ID</th>
+                            <th style="width:20px;text-align:center;">EPCID</th>
+                            <th style="width:20px;text-align:center;">Serial No</th>
+                            <th style="width:20px;text-align:center;">Location EPCID</th>
+                            <th style="width:20px;text-align:center;">Location</th>
+                            <th style="width:20px;text-align:center;">Status</th>
+                            <th style="width:10px;text-align:center;">Asset type</th>
+                            <th style="width:20px;text-align:center;">EPCIDInstallTime</th>
+                        </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                    </fieldset>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--add lab location-->
+<div class="modal fade" id="editWarehouseModal">
+ <div id="light" class="white_content">
+    <div class="modal-dialog" style="margin: 200px auto">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title">Update Location</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="editId">ID</label>
+                    <input type="text" id="editId" class="form-control"   autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="editEpcid">EPCID</label>
+                    <input type="text" id="editEpcid" class="form-control"   autocomplete="off">
+                </div>
+                 <div class="form-group">
+                    <label for="editEpcidInstallTime">EPCIDInstallTime</label>
+                    <input type="text" id="editEpcidInstallTime" class="form-control"   autocomplete="off">
+                 </div>
+                <div class="form-group">
+                    <label for="editSerialNo">Serial No</label>
+                    <input type="text" id="editSerialNo" class="form-control"  autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="editLocationEpcid">Location EPCID</label>
+                    <input type="text" id="editLocationEpcid" class="form-control"  autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="editLocation">Location</label>
+                    <input type="text" id="editLocation" class="form-control"  autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="editStatus">Status</label>
+                    <select class="form-control" id="editStatus">
+                        <option value="INSTALLED">INSTALLED </option>
+                        <option value="OBSOLETE">OBSOLETE</option>
+                        <option value="GENERATED">GENERATED</option>
+                        <option value="PRINTED">PRINTED</option>
+                        <option value="INITIALIZED">INITIALIZED</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editAssettype">Asset type</label>
+                    <input type="text" id="editAssettype" class="form-control"  autocomplete="off">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">close</button>
+                <button type="button" class="btn btn-primary" id="saveWarehouseButton" >save</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div>
+  <div id="fade" class="black_overlay">
+  </div>
+</div><!-- /.modal -->
+
+
+<div class="modal fade" id="ImportWarehouseModal">
+ <div id="lightimport" class="white_content">
+    <div class="modal-dialog" style="margin: 200px auto">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title">Warehousing Management</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <form id ="editfile" method="post" action="/Warehousing/import" enctype="multipart/form-data">
+                        <label for="editAssettype">Upload-File</label>
+                        <input type="file" id="upfile" name = "avatar" />
+                        <input type="submit" value = "submit" />
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">close</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->i
+ </div>
+ <div id="fadeimport" class="black_overlay">
+ </div>
+</div><!-- /.modal -->
+
+</body>
+</html>
+ <% include _foot.html %>
+ 
+<script>
+    var tab = '/warehousing';
+    function reflashTable(){
+        $('.table').eq(0).dataTable().fnDraw(false);
+    }
+    function bar(hasGet, totalGet) {
+    var flag = document.getElementById('icon-flag'),
+        processBar = document.getElementById('process-bar'),
+        widthPercentage = Math.round(hasGet/totalGet*100);
+    if (widthPercentage >= 100) {
+        widthPercentage = 100;
+    }
+    flag.style.left = (widthPercentage-1) + '%';
+    processBar.style.width = widthPercentage + '%';
+    if (widthPercentage == 0) {
+        processBar.style.borderStyle = 'none';
+       }
+    } 
+    var dataArray;
+    $(function() {
+        var epcid = '';
+        var pageSize = 15;
+        $('.table').dataTable({
+            "pagingType": "simple_numbers",
+            searching: false,
+            aLengthMenu:[pageSize],
+            "iDisplayLength": pageSize,
+            "bLengthChange": false,
+            aaSorting: [],
+            "oLanguage": {
+                "sLengthMenu": "Every Page: _MENU_ ",
+                "sZeroRecords": "Zero Records",
+                "sInfo": "From _START_ - _END_  Total _TOTAL_ ",
+                "sInfoEmpty": "no record",
+                "sInfoFiltered": "(From _MAX_ records to filter)",
+                "sSearch": "Search: ",
+                "oPaginate": {
+                    "sFirst": "First",
+                    "sPrevious": "Previous",
+                    "sNext": "Next",
+                    "sLast": "Last"
+                }
+            },
+            stateSave: true,
+            "processing": true,
+            "serverSide": true,
+            "columns": [
+                {"orderable": false},
+                {"orderable": false},
+                {"orderable": false},
+                {"orderable": false},
+                {"orderable": false},
+                {"orderable": false},
+                {"orderable": false},
+                {"orderable": false}
+            ],
+            "fnServerData": function(sSource, aoData, fnCallback) {
+                var start = aoData[3].value;
+                var length = aoData[4].value;
+                $.post('/warehousing/query', {epcid:epcid,start:start,length:length}, function(res) {
+                    if(res.code >= 0){
+                        dataArray = res.data.data;
+                        var ret = {recordsTotal: res.data.count, recordsFiltered: res.data.count, data:[]};
+                        for (var i = 0; i < res.data.data.length; i++) {
+                            var obj = res.data.data[i];
+                            var item = [];
+                            item.push('<a href="javascript:void(0);" onclick="updateEPCID(' + i + ')" data-index=i>'+obj.rfid_index+'</a>');
+                            item.push(obj.rfid_epcid);
+                            item.push(obj.asset_num);
+                            item.push(obj.location_epcid);
+                            item.push(obj.lasLocationString);
+                            item.push(obj.epcid_status);
+                            item.push(obj.label_type);
+                            item.push(obj.install_time); 
+                            ret.data.push(item);
+                        }
+                        fnCallback(ret);
+                    }
+                });
+            }
+        });
+        $('#SearchWareHouse').on('click', function(e) {
+            epcid = $('#sepcid').val();
+            reflashTable();
+        });
+        $('#ImportWareHouse').on('click', function(e) {
+            $('#ImportWarehouseModal').modal('toggle');
+        });
+    });
+
+    //update Location EPCID for equipment(label=E) and Location string for no-equipment(label=Z)
+    function updateEPCID(index) {
+        $("#editId").val(dataArray[index].rfid_index);
+        $("#editId").attr("disabled","disabled");
+        $("#editEpcid").val(dataArray[index].rfid_epcid);
+        $("#editEpcid").attr("disabled","disabled");
+        $("#editEpcidInstallTime").val(dataArray[index].install_time);
+        $("#editEpcidInstallTime").attr("disabled","disabled");
+        $("#editSerialNo").val(dataArray[index].asset_num);
+        $("#editLocationEpcid").val(dataArray[index].location_epcid);
+        $("#editLocation").val(dataArray[index].lasLocationString);
+        $("#editLocation").attr("readOnly","true");
+        $("#editLocationEpcid").attr("readOnly",false);
+        var label = dataArray[index].label_type;
+        if(label.search(/Z/) >=0){
+            $("#editLocationEpcid").attr("readOnly","true");
+            $("#editLocation").attr("readOnly",false);
+        }
+        $("#editStatus").val(dataArray[index].epcid_status);
+        //$("#editStatus").attr("disabled","disabled");
+        $("#editAssettype").val(dataArray[index].label_type);
+        $("#editAssettype").attr("disabled","disabled");
+        $('#editWarehouseModal').modal('toggle');
+    }
+    $('#saveWarehouseButton').on('click', function(e) {
+        if(!confirm("confirm modify?")){
+            return;
+        }
+        var locationS = $('#editLocation').val();
+        var index = $('#editId').val();
+        
+        $.post('/saveWarehouse', {index:index,locationS:locationS}, function (res) {
+            if (res.code < 0) {
+                return alert('fail'+res.msg);
+            }
+            $('#editWarehouseModal').modal('hide');
+        });
+        reflashTable();
+    });
+
+
+    $('#doWarehousing').on('click', function(e) {
+        var _width = document.getElementById("percent").innerText;
+        //alert(_width);
+        //document.getElementById("changed").style.width = _width;
+    });
+
+
+	/*$("._box").click(function () {
+        alert('box click');
+        $("#_f").click(); 
+    });
+	$("#_f").click(function () {
+        alert('file click');
+        var import_files = $("#_f").val();
+        $("#files").html(import_files);
+	});*/
+
+</script>

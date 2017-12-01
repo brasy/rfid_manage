@@ -1,0 +1,501 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <% include _head.html %>
+    <title>RFID Label Managment</title>
+    <!--<link href="/css/order.css" rel="stylesheet">-->
+        <style>
+@media print{
+　　.noprint{
+    display:none
+　　}
+}
+</style>
+</head>
+<body>
+
+<% include _nav.html %>
+<div class="container-fluid">
+    <div class="row">
+        <% include _menu.html %>
+         <div class="col-md-11 col-md-offset-1 main">
+                <div class="container-fluid">
+                    <input type="text" id='sepcid' class="form-control " placeholder="EPCID" style="width:155px;display:inline-block;margin-left:20px;">
+                    <button type="button" class="btn btn-info search" id="SearchEpcid" style="margin-left: 20px;margin-right: 20px">
+                        <span class="glyphicon glyphicon-search" aria-hidden="true"></span>Search 
+                    <button type="button" class="btn btn-info add" href="javascript:void(0);" onclick="print_new_tag()" style="margin-left: 20px;margin-right: 20px">
+                        <span class="glyphicon glyphicon" aria-hidden="true"></span>PRINT NEW LABEL
+                    </button>
+                    <button type="button" class="btn btn-info add" href="javascript:void(0);" onclick="print_label()" style="margin-left: 20px;margin-right: 20px">
+                        <span class="glyphicon glyphicon" aria-hidden="true"></span>PRINT EXIST LABEL
+                    </button>
+                    <button type="button" class="btn btn-info add" href="javascript:void(0);" onclick="label_warehouse()" style="margin-left: 20px;margin-right: 20px">
+                        <span class="glyphicon glyphicon" aria-hidden="true"></span>LABEL WAREHOUSE
+                    </button>
+                    <button type="button" class="btn btn-info add" href="javascript:void(0);" onclick="format_label()" style="margin-left: 20px;margin-right: 20px">
+                        <span class="glyphicon glyphicon" aria-hidden="true"></span>FORMAT LABEL
+                    </button>
+                    <div style="width: 99%">
+                        <fieldset><legend style="font:normal 20px '宋体'; margin-top:20px;">Rfid label Information</legend>
+                        <table class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th style="width:10px;text-align:center">ID</th>
+                                <th style="width:20px;text-align:center">EPCID</th>
+                                <th style="width:20px;text-align:center">TID</th>
+                                <th style="width:20px;text-align:center">Status</th>
+                                <th style="width:20px;text-align:center">EPCID Type</th>
+                                <th style="width:20px;text-align:center">EPCIDGen Time</th>
+                                <th style="width:20px;text-align:center">Obsolete Time</th>
+                            </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                        </fieldset>
+                    </div>
+
+                    
+                </div>
+            </div>
+        
+            <tbody></tbody>
+            
+       </div>
+       
+   
+       
+   
+</div>
+
+
+<div class="modal fade" id="printNewLabel">
+    <div class="modal-dialog" style="margin: 200px auto">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title">Pring New Label</h4>
+            </div>
+            <div class="modal-body">
+            	  <p>select site：<select class="form-control" required id="site">
+            	  	<option value="NJ"> Nanjing </option>
+            	  	<option value="SH"> Shanghai </option>
+            	  	<option value="BJ"> Beijing </option>
+            	  	<option value="HZ"> Hangzhou </option>
+            	  	<option value="CD"> Chengdu </option>
+                </select></p>
+                <div class="form-group">
+                    <label for="weightPrice">number [1 - 50]</label>
+                    <input type="number" id="print_num" class="form-control"   autocomplete="off">
+                </div>
+                
+                <p>select label type: <Select class="form-control" required id="type">
+                  <option value="E"> Asset </option>
+            	  <option value="Z"> Location </option>
+                </select></p>
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="print_new" >Print</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<div class="modal fade" id="printLabel">
+    <div class="modal-dialog" style="margin: 200px auto">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title">Print Label</h4>
+            </div>
+            <div class="modal-body">
+            	  <p>Selet intput time：<select class="form-control" required id="number_type">
+            	  	<option value="EPCID"> EPCID </option>
+            	  	<option value="ASSET_SN"> Asset </option>
+                </select></p>
+                <div class="form-group">
+                    <label >input number</label>
+                    <input type="text" id="serial_num" class="form-control"   autocomplete="off">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="print" >Print</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<!--标签入库弹出的编辑框-->
+<div class="modal fade" id="labelWarehouse">
+    <div class="modal-dialog" style="margin: 200px auto">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title">标签入库</h4>
+            </div>
+            <div class="modal-body">
+            	  <p>请扫描标签二维码：
+            	  	  <input type="text" id="rfid_epcid" class="form-control"   autocomplete="off">
+            	  </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="label_warehouse" >入库</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<div class="modal fade" id="formatlabel">
+    <div class="modal-dialog" style="margin: 200px auto">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title">格式化标签</h4>
+            </div>
+            <div class="modal-body">
+            	  <p>请扫描标签二维码：
+            	  	  <input type="text" id="rfid_epcid_formatlabel" class="form-control"   autocomplete="off">
+            	  </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="format_label" >格式化</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<div class="modal fade" id="rfid_tag">
+    <div class="modal-dialog" style="margin: 200px ">
+        <div class="modal-content">
+        	  
+            <!--startprint-->
+            <div class="modal-body">
+				<img id="_qrcode" src="file:\C:/Users/jyuan011/AppData/Local/TempPreview.bmp">
+			</div>
+            <!--endprint-->
+            <br>
+            <br>
+            <div class="modal-footer">
+            <button type="button" >print qrcode</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+</body>
+</html>
+<% include _foot.html %>
+<script type="text/javascript">
+
+function reflashTable(){
+        $('.table').eq(0).dataTable().fnDraw(false);
+    }
+
+$(function() {
+        var epcid = '';
+        var pageSize = 15;
+        $('.table').dataTable({
+            "pagingType": "simple_numbers",
+            searching: false,
+            aLengthMenu:[pageSize],
+            "iDisplayLength": pageSize,
+            "bLengthChange": false,
+            aaSorting: [],
+            "oLanguage": {
+                "sLengthMenu": "Every Page: _MENU_ ",
+                "sZeroRecords": "Zero Records",
+                "sInfo": "From _START_ - _END_  Total _TOTAL_ ",
+                "sInfoEmpty": "no record",
+                "sInfoFiltered": "(From _MAX_ records to filter)",
+                "sSearch": "Search: ",
+                "oPaginate": {
+                    "sFirst": "First",
+                    "sPrevious": "Previous",
+                    "sNext": "Next",
+                    "sLast": "Last"
+                }
+            },
+            stateSave: true,
+            "processing": true,
+            "serverSide": true,
+            "columns": [
+                {"orderable": false},
+                {"orderable": false},
+                {"orderable": false},
+                {"orderable": false},
+                {"orderable": false},
+                {"orderable": false},
+                {"orderable": false}
+            ],
+            "fnServerData": function(sSource, aoData, fnCallback) {
+                var start = aoData[3].value;
+                var length = aoData[4].value;
+                $.post('/rfid_label/query', {epcid:epcid,start:start,length:length}, function(res) {
+                    if(res.code >= 0){
+                        dataArray = res.data.data;
+                        var ret = {recordsTotal: res.data.count, recordsFiltered: res.data.count, data:[]};
+                        for (var i = 0; i < res.data.data.length; i++) {
+                            var obj = res.data.data[i];
+                            var item = [];
+                            item.push(obj.rfid_index);
+                            item.push(obj.rfid_epcid);
+                            item.push(obj.rfid_tid);
+                            item.push(obj.epcid_status);
+                            item.push(obj.label_type);
+                            if (obj.gen_time != null){
+                                obj.gen_time = obj.gen_time.slice(3, -5);
+                            }
+                            item.push(obj.gen_time);
+                            item.push(obj.obsolete_time);
+                            ret.data.push(item);
+                        }
+                        fnCallback(ret);
+                    }
+                });
+            }
+        });
+        $('#SearchEpcid').on('click', function(e) {
+            epcid = $('#sepcid').val();
+            reflashTable();
+        });
+    });
+
+function connect() {
+    //var socket = io.connect("135.251.123.102:6969");
+    var websocket = new WebSocket("ws://135.251.123.102:6969/");
+    websocket.onopen = function(evt) { 
+            $('#printLabel').modal('hide');
+            return;
+        }; 
+    websocket.onmessage = function (event) {
+    	  $('#printLabel').modal('hide');
+        alert(event.data);
+        return;
+    }
+ }
+
+function doPrint(objDoc, strQRCode) {
+	objDoc.GetObject("objQRCode").Text = "LAS-EPCID:" + strQRCode;
+	objDoc.GetObject("objStr1").Text = strQRCode.substr(0,4);
+	objDoc.GetObject("objStr2").Text = strQRCode.substr(4,4);
+	objDoc.GetObject("objStr3").Text = strQRCode.substr(8,4);
+//	var bmpPath = (new ActiveXObject("Scripting.FileSystemObject")).GetSpecialFolder(2) + "Preview.bmp";
+//	objDoc.Export(4, bmpPath, 180);
+	return objDoc.PrintOut(1, 0);
+}
+
+function checkPrinter(verify)
+{
+	var objDoc;
+	try {
+		objDoc = new ActiveXObject("bpac.Document");
+	} catch (e) {
+		alert("Please enable ActiveX in your browser");
+		return null;
+	}
+
+	if (null==objDoc || undefined==objDoc) {
+		alert("Make sure the printer SDK properly installed");
+		return null;
+	}
+
+	var templateFile = "D:\\working\\RFID_QR_mgr\\nameplate.lbx";
+	if (!objDoc.Open(templateFile)) {
+		alert("make sure the template file '" + templateFile + "' exists");
+		return null;
+	}
+
+	var PRINTER_NAME = "Brother PT-9800PCN";
+	var printerName = objDoc.GetPrinterName();
+	if (printerName != PRINTER_NAME) {
+		alert("Please use correct printer type: " + PRINTER_NAME);
+		objDoc.Close();
+		return null;
+	}
+
+	var objPrinter = objDoc.Printer;
+	if (!objPrinter) {
+		alert("Make sure the printer being properly installed");
+		objDoc.Close();
+		return null;
+	}
+	if (!objPrinter.IsPrinterOnline(PRINTER_NAME)) {
+		alert("Make sure the printer is turned ON?");
+		objDoc.Close();
+		return null;
+	}
+	if (objPrinter.GetMediaName() != "3/4\"") {
+		alert("Make sure the printer's tape width is exactly 18mm");
+		objDoc.Close();
+		return null;
+	}
+	if (verify) {
+		objDoc.Close();
+	}
+	return objDoc;
+}
+
+function doPrintNew(objDoc, res)
+{
+	var failedList = [];
+	var printOK = (null != objDoc);
+	if (printOK) {
+		if (printOK = objDoc.StartPrint("", 0)) {
+			for (var i in res.data.data) {
+				if (!doPrint(objDoc, res.data.data[i])) {
+					failedList.push(res.data.data[i]);
+					printOK = false;
+				}
+			}
+			objDoc.EndPrint();
+		}
+		objDoc.Close();
+	}
+	if (!printOK) {
+		if (0 == failedList.length) {
+			failedList = res.data.data;
+		}
+		$.post('/rfid_label/print_failed', {failed: failedList}, function(res) {
+			if (res.data.result != "ok")
+			{
+				alert(res.data.result);
+			}
+			location.reload();
+		});
+	}
+}
+
+function doPrintOne(objDoc, res)
+{
+	if (null != objDoc) {
+		objDoc.StartPrint("", 0);
+		for (var i in res.data.data) {
+			doPrint(objDoc, res.data.data[i]);
+		}
+		objDoc.EndPrint();
+		objDoc.Close();
+	}
+}
+
+function doPrintCommon(res, doit)
+{
+	if (res.data.result != "ok") {
+		alert(res.data.result);
+		return;
+	}
+
+	doit(checkPrinter(false), res);
+
+	location.reload();
+}
+
+    var tab = '/priceManage';
+    var print_new_tag = function () {
+        $("#printNewLabel").modal("toggle");
+		document.getElementById("print_new").disabled = (null == checkPrinter(true));
+    }
+    var print_label = function () {
+        $("#printLabel").modal("toggle");
+		document.getElementById("print").disabled = (null == checkPrinter(true));
+    }
+    var label_warehouse = function () {
+        $("#labelWarehouse").modal("toggle");
+    }
+    var format_label = function () {
+        $("#formatlabel").modal("toggle");
+    }
+    var displayDate = function(){
+	document.getElementById("demo").innerHTML=Date();
+   }
+   
+   $(function () {
+        $('#print_new').click(function (e) {
+            e.preventDefault();
+            var site = $("#site").val();
+            var number = $("#print_num").val();
+            if(!site){
+                alert("site不能为空");
+                //将焦点移动到用户名上
+                $("#print_num").focus();
+                return;
+            }
+            if(!number){
+                alert("number不能为空");
+                $("#print_num").focus();
+                return;
+            }
+			if (number < 1 || 50 < number) {
+				alert("Don't print more than 50 pieces at one time");
+                $("#print_num").focus();
+                return;
+			}
+            var label_type = $("#type").val();
+            
+            $.post('/rfid_label/printNewLabel',  {site: site, type:label_type,number: number},function (res) {
+				doPrintCommon(res, doPrintNew);
+            });
+        })
+        
+        $('#print').click(function (e) {
+            e.preventDefault();
+            var type = $("#number_type").val();
+            var number = $("#serial_num").val();
+            if(!type){
+                alert("串号类型不能为空");
+                //将焦点移动到用户名上
+                $("#number_type").focus();
+                return;
+            }
+
+			if (!verifyEPCID(number)) {
+				alert("Incorrect format for serial number");
+				$("#serial_num").focus();
+				return;
+			}
+			$.post('/rfid_label/printLabel',  {type: type, number: number},function (res) {
+				doPrintCommon(res, doPrintOne);
+			});
+		})
+
+		$('#label_warehouse').click(function (e) {
+			e.preventDefault();
+
+			var epcid = $("#rfid_epcid").val().substr(10,12);
+			if (!verifyEPCID(epcid)) {
+				alert("Incorrect format for serial number");
+				$("#rfid_epcid").focus();
+				return;
+			}
+			$.post('/rfid_label/label_warehouse', {epcid:epcid},function (res) {
+				if (res.data.result != "ok") {
+					alert(res.data.result);
+					$('#labelWarehouse').modal('hide');
+				}
+				location.reload();
+			});
+		})
+
+		$('#format_label').click(function (e) {
+			e.preventDefault();
+			var epcid = $("#rfid_epcid_formatlabel").val().substr(10,12);
+			if (!epcid) {
+				epcid = "FFFFFFFFFFFF";
+			}
+			else if (!verifyEPCID(epcid)) {
+				alert("Incorrect format for serial number");
+				$("#rfid_epcid_formatlabel").focus();
+				return;
+			}
+			$.post('/rfid_label/format_label', {epcid:epcid},function (res) {
+				if (res.data.result != "ok")
+				{
+					alert(res.data.result);
+					$('#formatlabel').modal('hide');
+				}
+				location.reload();
+			});
+		})
+	})
+
+</script>
+

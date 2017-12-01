@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <% include _head.html %>
-    <title>location manager</title>
+    <title>Location manage</title>
     <link href="/css/userlist.css" rel="stylesheet">
 </head>
 <body style="">
@@ -240,8 +240,8 @@
         jQuery("#building").empty();
         jQuery("#floor").empty();
         for(var i=0;i<addressInfoArray.length;i++){
-            var building;//去重的标识
-            var fristCity ;//区和市默认选择第一个
+            var building;
+            var fristCity;
             if($('#site').val() == addressInfoArray[i].site){
                 if(building != addressInfoArray[i].building){
                     console.log("此次 building为"+building+"数组中的为"+addressInfoArray[i].building);
